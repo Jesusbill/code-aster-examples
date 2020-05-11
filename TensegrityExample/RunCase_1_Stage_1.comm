@@ -1,0 +1,167 @@
+DEBUT(LANG='EN')
+
+
+AccelOfGravity = 9806
+
+tStartAnalysis = -1.0
+
+tStartDynamic = 0.0
+
+tFin = 4
+
+dt = 0.01
+
+dtArchive = 1 * dt
+
+gravitySteps = 10
+
+iterationMaxNumber = 25
+
+
+
+mesh = LIRE_MAILLAGE(UNITE=20)
+
+model = AFFE_MODELE(AFFE=(_F(MODELISATION=('3D', ),
+                             PHENOMENE='MECANIQUE',
+                             TOUT='OUI'),
+                          _F(GROUP_MA=('cable', ),
+                             MODELISATION=('CABLE', ),
+                             PHENOMENE='MECANIQUE')),
+                    MAILLAGE=mesh)
+
+elemprop = AFFE_CARA_ELEM(CABLE=_F(GROUP_MA=('cable', ),
+                                   N_INIT=0.001,
+                                   SECTION=0.1),
+                          MODELE=model)
+funcPESA = DEFI_FONCTION(NOM_PARA='INST',
+                         PROL_DROITE='CONSTANT',
+                         PROL_GAUCHE='CONSTANT',
+                         VALE=(tStartAnalysis, 0.0, tStartDynamic, 1.0))
+
+instInGr = DEFI_LIST_REEL(DEBUT=tStartAnalysis,
+                          INTERVALLE=_F(JUSQU_A=tStartDynamic,
+                                        NOMBRE=gravitySteps))
+
+instGr = DEFI_LIST_INST(DEFI_LIST=_F(LIST_INST=instInGr),
+                        METHODE='AUTO')
+
+mater = DEFI_MATERIAU(ELAS=_F(E=210000.0,
+                              NU=0.2,
+                              RHO=7.85e-09))
+
+cable = DEFI_MATERIAU(CABLE=_F(EC_SUR_E=0.0000001),
+                      ELAS=_F(E=210000.0,
+                              NU=0.2,
+                              RHO=7.85e-09))
+
+fieldmat = AFFE_MATERIAU(AFFE=(_F(MATER=(mater, ),
+                                  TOUT='OUI'),
+                               _F(GROUP_MA=('cable', ),
+                                  MATER=(cable, ))),
+                         MODELE=model)
+
+instIn = DEFI_LIST_REEL(DEBUT=tStartDynamic,
+                        INTERVALLE=_F(JUSQU_A=tFin,
+                                      PAS=dt))
+
+inst = DEFI_LIST_INST(DEFI_LIST=_F(LIST_INST=instIn),
+                      METHODE='AUTO')
+
+instArch = DEFI_LIST_REEL(DEBUT=tStartDynamic,
+                          INTERVALLE=_F(JUSQU_A=tFin,
+                                        PAS=dtArchive))
+grdSupps = AFFE_CHAR_MECA(DDL_IMPO=(
+                                    _F(DX=0.0,
+                                       DY=0.0,
+                                       DZ=0.0,
+                                       GROUP_NO=('fix', ))),
+                          MODELE=model)
+ACClire = DEFI_FONCTION(NOM_PARA='INST',
+                        NOM_RESU='ACC',
+                        PROL_DROITE='CONSTANT',
+                        PROL_GAUCHE='CONSTANT',
+                        VALE=(tStartDynamic, 0.0, 1.0, 0.0000,  ))
+
+ACCscale = CALC_FONCTION(COMB=_F(COEF=AccelOfGravity,
+                                 FONCTION=ACClire))
+
+instInEQ = DEFI_LIST_REEL(DEBUT=tStartDynamic,
+                          INTERVALLE=_F(JUSQU_A=tFin,
+                                        PAS=dt))
+exPESA = AFFE_CHAR_MECA(MODELE=model,
+                        PESANTEUR=_F(DIRECTION=(0.0, 0.0, -1.0),
+                                     GRAVITE=AccelOfGravity))
+ACCreal = CALC_FONC_INTERP(FONCTION=ACCscale,
+                           INTERPOL='LIN',
+                           LIST_PARA=instInEQ,
+                           NOM_PARA='INST',
+                           NOM_RESU='ACC',
+                           PROL_DROITE='CONSTANT',
+                           PROL_GAUCHE='CONSTANT')
+ASSEMBLAGE(CARA_ELEM=elemprop,
+           CHAM_MATER=fieldmat,
+           CHARGE=(grdSupps, ),
+           MATR_ASSE=(_F(MATRICE=CO('RIGIDITE'),
+                         OPTION='RIGI_MECA'),
+                      _F(MATRICE=CO('MASSE'),
+                         OPTION='MASS_MECA')),
+           MODELE=model,
+           NUME_DDL=CO('NUMEDDL'))
+res_Dyna = DYNA_NON_LINE(ARCHIVAGE=_F(CHAM_EXCLU=('VITE', 'VARI_ELGA'),
+                                      LIST_INST=instInGr),
+                         CARA_ELEM=elemprop,
+                         CHAM_MATER=fieldmat,
+                         COMPORTEMENT=(_F(DEFORMATION='PETIT',
+                                          RELATION='ELAS',
+                                          TOUT='OUI'),
+                                       _F(DEFORMATION='GROT_GDEP',
+                                          GROUP_MA=('cable', ),
+                                          RELATION='CABLE')),
+                         
+                         CONVERGENCE=_F(ARRET='OUI',
+                                        ITER_GLOB_MAXI=iterationMaxNumber),
+                         EXCIT=(_F(CHARGE=grdSupps),
+                                _F(CHARGE=exPESA,
+                                   FONC_MULT=funcPESA)),
+                         INCREMENT=_F(LIST_INST=instGr),
+                         MODELE=model,
+                         SCHEMA_TEMPS=_F(FORMULATION='DEPLACEMENT',
+                                         MODI_EQUI='OUI',
+                                         SCHEMA='HHT'))
+
+DIRSEISM = CALC_CHAR_SEISME(DIRECTION=(0.0, 0.0, 1.0),
+                            MATR_MASS=MASSE,
+                            MONO_APPUI='OUI')
+
+ACCForce = AFFE_CHAR_MECA(MODELE=model,
+                          VECT_ASSE=DIRSEISM)
+
+res_Dyna = DYNA_NON_LINE(reuse=res_Dyna,
+                         ARCHIVAGE=_F(CHAM_EXCLU=('VITE', 'VARI_ELGA'),
+                                      LIST_INST=instArch),
+                         CARA_ELEM=elemprop,
+                         CHAM_MATER=fieldmat,
+                         COMPORTEMENT=(_F(DEFORMATION='PETIT',
+                                          RELATION='ELAS',
+                                          TOUT='OUI'),
+                                      _F(DEFORMATION='GROT_GDEP',
+                                          GROUP_MA=('cable', ),
+                                          RELATION='CABLE')),
+                         
+                         CONVERGENCE=_F(ARRET='OUI',
+                                        ITER_GLOB_MAXI=iterationMaxNumber),
+                         ETAT_INIT=_F(EVOL_NOLI=res_Dyna),
+                         EXCIT=(_F(CHARGE=grdSupps),
+                                _F(CHARGE=ACCForce,
+                                   FONC_MULT=ACCreal),
+                                _F(CHARGE=exPESA)),
+                         INCREMENT=_F(LIST_INST=inst),
+                         MODELE=model,
+                         SCHEMA_TEMPS=_F(FORMULATION='DEPLACEMENT',
+                                         MODI_EQUI='OUI',
+                                         SCHEMA='HHT'))
+IMPR_RESU(RESU=_F(RESULTAT=res_Dyna,
+                  TOUT_CHAM='OUI'),
+          UNITE=80)
+
+FIN()

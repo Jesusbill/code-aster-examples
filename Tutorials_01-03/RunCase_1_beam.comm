@@ -1,0 +1,82 @@
+DEBUT(LANG='EN')
+
+
+mesh = LIRE_MAILLAGE(identifier='0:1',
+                     UNITE=3)
+
+model = AFFE_MODELE(identifier='1:1',
+                    AFFE=_F(MODELISATION=('3D', ),
+                            PHENOMENE='MECANIQUE',
+                            TOUT='OUI'),
+                    MAILLAGE=mesh)
+
+steel = DEFI_MATERIAU(identifier='2:1',
+                      ELAS=_F(E=210000.0,
+                              NU=0.1))
+
+fieldmat = AFFE_MATERIAU(identifier='3:1',
+                         AFFE=_F(GROUP_MA=('beam', ),
+                                 MATER=(steel, )),
+                         MODELE=model)
+
+load = AFFE_CHAR_MECA(identifier='4:1',
+                      DDL_IMPO=_F(DX=0.0,
+                                  DY=0.0,
+                                  DZ=0.0,
+                                  GROUP_NO=('fix', )),
+                      MODELE=model)
+
+load0 = AFFE_CHAR_MECA(identifier='5:1',
+                       FORCE_FACE=_F(FZ=-1.0,
+                                     GROUP_MA=('force', )),
+                       MODELE=model)
+
+reslin = MECA_STATIQUE(identifier='6:1',
+                       CHAM_MATER=fieldmat,
+                       EXCIT=(_F(CHARGE=load),
+                              _F(CHARGE=load0)),
+                       MODELE=model)
+
+reslin = CALC_CHAMP(identifier='7:1',
+                    reuse=reslin,
+                    CONTRAINTE=('SIGM_ELNO', 'SIGM_NOEU'),
+                    DEFORMATION=('EPSI_NOEU', ),
+                    FORCE=('REAC_NODA', ),
+                    RESULTAT=reslin)
+
+table = POST_RELEVE_T(identifier='8:1',
+                      ACTION=_F(GROUP_NO=('fix', ),
+                                INTITULE='reaction',
+                                NOM_CHAM='REAC_NODA',
+                                OPERATION=('EXTRACTION', ),
+                                RESULTANTE=('DZ', ),
+                                RESULTAT=reslin))
+
+equiv = CALC_CHAMP(identifier='9:1',
+                   CRITERES=('SIEQ_NOEU', ),
+                   RESULTAT=reslin)
+
+table3 = MACR_LIGN_COUPE(identifier='10:1',
+                         LIGN_COUPE=_F(COOR_EXTR=(50.0, 1000.0, 0.0),
+                                       COOR_ORIG=(50.0, 0.0, 0.0),
+                                       NB_POINTS=20),
+                         NOM_CHAM='SIGM_NOEU',
+                         RESULTAT=reslin)
+
+IMPR_RESU(identifier='11:1',
+          RESU=(_F(NOM_CHAM=('DEPL', 'SIGM_NOEU', 'SIGM_ELNO', 'EPSI_NOEU'),
+                   RESULTAT=reslin),
+                _F(NOM_CHAM=('SIEQ_NOEU', ),
+                   RESULTAT=equiv)),
+          UNITE=80)
+
+IMPR_TABLE(identifier='12:1',
+           TABLE=table,
+           UNITE=4)
+
+IMPR_TABLE(identifier='13:1',
+           SEPARATEUR=' ,',
+           TABLE=table3,
+           UNITE=2)
+
+FIN()

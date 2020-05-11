@@ -1,0 +1,116 @@
+DEBUT(LANG='EN')
+
+
+mesh = LIRE_MAILLAGE(identifier='0:1',
+                     UNITE=20)
+
+model = AFFE_MODELE(identifier='1:1',
+                    AFFE=_F(MODELISATION=('DST', ),
+                            PHENOMENE='MECANIQUE',
+                            TOUT='OUI'),
+                    MAILLAGE=mesh)
+
+elemprop = AFFE_CARA_ELEM(identifier='2:1',
+                          COQUE=(_F(COQUE_NCOU=5,
+                                    EPAIS=140.0,
+                                    GROUP_MA=('panelA', ),
+                                    VECTEUR=(0.0, 1.0, 0.0)),
+                                 _F(COQUE_NCOU=1,
+                                    EPAIS=140.0,
+                                    GROUP_MA=('panelB', ),
+                                    VECTEUR=(0.0, 1.0, 0.0))),
+                          MODELE=model)
+
+wood = DEFI_MATERIAU(identifier='3:1',
+                     ELAS_ORTH=_F(E_L=11600.0,
+                                  E_N=300.0,
+                                  E_T=300.0,
+                                  G_LN=650.0,
+                                  G_LT=650.0,
+                                  G_TN=100.0,
+                                  NU_LN=0.35,
+                                  NU_LT=0.35,
+                                  NU_TN=0.35,
+                                  RHO=5e-10))
+
+wood_eq = DEFI_MATERIAU(identifier='4:1',
+                        ELAS_ORTH=_F(E_L=10743.4,
+                                     E_N=300.0,
+                                     E_T=1156.6,
+                                     G_LN=198.4,
+                                     G_LT=325.0,
+                                     G_TN=93.5,
+                                     NU_LN=0.01,
+                                     NU_LT=0.01,
+                                     NU_TN=0.01,
+                                     RHO=5e-10))
+
+clt140 = DEFI_COMPOSITE(identifier='5:1',
+                        COUCHE=(_F(EPAIS=40.0,
+                                   MATER=wood),
+                                _F(EPAIS=20.0,
+                                   MATER=wood,
+                                   ORIENTATION=90.0),
+                                _F(EPAIS=20.0,
+                                   MATER=wood),
+                                _F(EPAIS=20.0,
+                                   MATER=wood,
+                                   ORIENTATION=90.0),
+                                _F(EPAIS=40.0,
+                                   MATER=wood)))
+
+clt_eq = DEFI_COMPOSITE(identifier='6:1',
+                        COUCHE=_F(EPAIS=140.0,
+                                  MATER=wood_eq))
+
+fieldmat = AFFE_MATERIAU(identifier='7:1',
+                         AFFE=(_F(GROUP_MA=('panelA', ),
+                                  MATER=(clt140, )),
+                               _F(GROUP_MA=('panelB', ),
+                                  MATER=(clt_eq, ))),
+                         MODELE=model)
+
+support = AFFE_CHAR_MECA(identifier='8:1',
+                         DDL_IMPO=_F(DX=0.0,
+                                     DY=0.0,
+                                     DZ=0.0,
+                                     GROUP_MA=('support', )),
+                         MODELE=model)
+
+load = AFFE_CHAR_MECA(identifier='9:1',
+                      FORCE_COQUE=_F(FZ=-0.002,
+                                     TOUT='OUI'),
+                      MODELE=model,
+                      PESANTEUR=_F(DIRECTION=(0.0, 0.0, -1.0),
+                                   GRAVITE=10000.0))
+
+reslin = MECA_STATIQUE(identifier='10:1',
+                       CARA_ELEM=elemprop,
+                       CHAM_MATER=fieldmat,
+                       EXCIT=(_F(CHARGE=support),
+                              _F(CHARGE=load)),
+                       MODELE=model)
+
+reslin = CALC_CHAMP(identifier='11:1',
+                    reuse=reslin,
+                    CONTRAINTE=('EFGE_NOEU', 'SIGM_ELNO'),
+                    RESULTAT=reslin)
+
+unnamed0 = POST_CHAMP(identifier='12:1',
+                      EXTR_COQUE=_F(NIVE_COUCHE='INF',
+                                    NOM_CHAM=('SIGM_ELNO', ),
+                                    NUME_COUCHE=1),
+                      RESULTAT=reslin)
+
+unnamed1 = CALC_CHAMP(identifier='13:1',
+                      CONTRAINTE=('SIGM_NOEU', ),
+                      RESULTAT=unnamed0)
+
+IMPR_RESU(identifier='14:1',
+          RESU=(_F(NOM_CHAM=('DEPL', 'EFGE_NOEU'),
+                   RESULTAT=reslin),
+                _F(NOM_CHAM=('SIGM_NOEU', ),
+                   RESULTAT=unnamed1)),
+          UNITE=80)
+
+FIN()

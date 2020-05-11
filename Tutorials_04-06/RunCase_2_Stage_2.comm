@@ -1,0 +1,71 @@
+POURSUITE(LANG='EN')
+
+
+mesh0 = LIRE_MAILLAGE(identifier='0:2',
+                      UNITE=2)
+
+model1 = AFFE_MODELE(identifier='1:2',
+                     AFFE=_F(MODELISATION=('3D', ),
+                             PHENOMENE='MECANIQUE',
+                             TOUT='OUI'),
+                     MAILLAGE=mesh0)
+
+young = DEFI_FONCTION(identifier='2:2',
+                      NOM_PARA='TEMP',
+                      PROL_DROITE='CONSTANT',
+                      PROL_GAUCHE='CONSTANT',
+                      VALE=(10.0, 210000.0, 15.0, 210000.0, 20.0, 105000.0))
+
+poisson = DEFI_CONSTANTE(identifier='3:2',
+                         VALE=0.2)
+
+alpha = DEFI_CONSTANTE(identifier='4:2',
+                       VALE=1.2e-05)
+
+steel = DEFI_MATERIAU(identifier='5:2',
+                      ELAS_FO=_F(ALPHA=alpha,
+                                 E=young,
+                                 NU=poisson,
+                                 TEMP_DEF_ALPHA=15.0))
+
+load1 = AFFE_CHAR_MECA(identifier='6:2',
+                       DDL_IMPO=_F(DX=0.0,
+                                   DY=0.0,
+                                   DZ=0.0,
+                                   GROUP_MA=('fix', )),
+                       MODELE=model1)
+
+proj = PROJ_CHAMP(identifier='7:2',
+                  MAILLAGE_1=mesh,
+                  MAILLAGE_2=mesh0,
+                  METHODE='COLLOCATION',
+                  NOM_CHAM=('TEMP', ),
+                  RESULTAT=resther)
+
+fieldma1 = AFFE_MATERIAU(identifier='8:2',
+                         AFFE=_F(MATER=(steel, ),
+                                 TOUT='OUI'),
+                         AFFE_VARC=_F(EVOL=proj,
+                                      NOM_VARC='TEMP',
+                                      PROL_DROITE='CONSTANT',
+                                      PROL_GAUCHE='CONSTANT',
+                                      TOUT='OUI',
+                                      VALE_REF=15.0),
+                         MODELE=model1)
+
+reslin1 = MECA_STATIQUE(identifier='9:2',
+                        CHAM_MATER=fieldma1,
+                        EXCIT=_F(CHARGE=load1),
+                        MODELE=model1)
+
+IMPR_RESU(identifier='10:2',
+          RESU=_F(NOM_CHAM=('TEMP', ),
+                  RESULTAT=proj),
+          UNITE=3)
+
+IMPR_RESU(identifier='11:2',
+          RESU=_F(RESULTAT=reslin1,
+                  TOUT_CHAM='OUI'),
+          UNITE=4)
+
+FIN()

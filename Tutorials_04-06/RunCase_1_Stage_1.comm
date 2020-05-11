@@ -1,0 +1,40 @@
+DEBUT(LANG='EN')
+
+
+mesh = LIRE_MAILLAGE(identifier='0:1',
+                     UNITE=20)
+
+model = AFFE_MODELE(identifier='1:1',
+                    AFFE=_F(MODELISATION=('3D', ),
+                            PHENOMENE='THERMIQUE',
+                            TOUT='OUI'),
+                    MAILLAGE=mesh)
+
+mater = DEFI_MATERIAU(identifier='2:1',
+                      THER=_F(LAMBDA=6.0))
+
+fieldmat = AFFE_MATERIAU(identifier='3:1',
+                         AFFE=_F(MATER=(mater, ),
+                                 TOUT='OUI'),
+                         MODELE=model)
+
+load = AFFE_CHAR_THER(identifier='4:1',
+                      FLUX_REP=_F(FLUN=0.0,
+                                  GROUP_MA=('ins', )),
+                      MODELE=model,
+                      TEMP_IMPO=(_F(GROUP_MA=('up_face', ),
+                                    TEMP=10.0),
+                                 _F(GROUP_MA=('low_face', ),
+                                    TEMP=20.0)))
+
+resther = THER_LINEAIRE(identifier='5:1',
+                        CHAM_MATER=fieldmat,
+                        EXCIT=_F(CHARGE=load),
+                        MODELE=model)
+
+IMPR_RESU(identifier='6:1',
+          RESU=_F(RESULTAT=resther,
+                  TOUT_CHAM='OUI'),
+          UNITE=80)
+
+FIN()

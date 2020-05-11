@@ -1,0 +1,52 @@
+DEBUT(LANG='EN')
+
+
+mesh = LIRE_MAILLAGE(identifier='0:1',
+                     UNITE=20)
+
+model = AFFE_MODELE(identifier='1:1',
+                    AFFE=_F(MODELISATION=('POU_D_E', ),
+                            PHENOMENE='MECANIQUE',
+                            TOUT='OUI'),
+                    MAILLAGE=mesh)
+
+elemprop = AFFE_CARA_ELEM(identifier='2:1',
+                          MODELE=model,
+                          POUTRE=_F(CARA=('H', ),
+                                    GROUP_MA=('Group_1', ),
+                                    SECTION='RECTANGLE',
+                                    VALE=(100.0, )))
+
+mater = DEFI_MATERIAU(identifier='3:1',
+                      ELAS=_F(E=210000.0,
+                              NU=0.2))
+
+fieldmat = AFFE_MATERIAU(identifier='4:1',
+                         AFFE=_F(MATER=(mater, ),
+                                 TOUT='OUI'),
+                         MODELE=model)
+
+load = AFFE_CHAR_MECA(identifier='5:1',
+                      DDL_IMPO=_F(GROUP_NO=('fix', ),
+                                  LIAISON='ENCASTRE'),
+                      FORCE_NODALE=_F(FZ=-1000.0,
+                                      GROUP_NO=('force', )),
+                      MODELE=model)
+
+reslin = MECA_STATIQUE(identifier='6:1',
+                       CARA_ELEM=elemprop,
+                       CHAM_MATER=fieldmat,
+                       EXCIT=_F(CHARGE=load),
+                       MODELE=model)
+
+reslin = CALC_CHAMP(identifier='7:1',
+                    reuse=reslin,
+                    CONTRAINTE=('EFGE_NOEU', 'SIPO_NOEU'),
+                    RESULTAT=reslin)
+
+IMPR_RESU(identifier='8:1',
+          RESU=_F(RESULTAT=reslin,
+                  TOUT_CHAM='OUI'),
+          UNITE=2)
+
+FIN()

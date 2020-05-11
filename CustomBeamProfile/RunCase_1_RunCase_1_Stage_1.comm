@@ -1,0 +1,73 @@
+DEBUT(LANG='EN')
+
+
+mesh = LIRE_MAILLAGE(identifier='0:1',
+                     UNITE=20)
+
+model = AFFE_MODELE(identifier='1:1',
+                    AFFE=_F(MODELISATION=('POU_D_T', ),
+                            PHENOMENE='MECANIQUE',
+                            TOUT='OUI'),
+                    MAILLAGE=mesh)
+
+elemprop = AFFE_CARA_ELEM(identifier='2:1',
+                          MODELE=model,
+                          POUTRE=_F(CARA=('A', 'IY', 'IZ', 'AZ', 'AY', 'JX', 'RY', 'RZ'),
+                                    GROUP_MA=('beam', ),
+                                    SECTION='GENERALE',
+                                    VALE=(5383.0, 36920000.0, 13360000.0, 2.98, 1.35, 204300.0, 100.0, 95.0),
+                                    VARI_SECT='CONSTANT'))
+
+steel = DEFI_MATERIAU(identifier='3:1',
+                      ELAS=_F(E=200000.0,
+                              NU=0.2,
+                              RHO=7.8e-09))
+
+fieldmat = AFFE_MATERIAU(identifier='4:1',
+                         AFFE=_F(MATER=(steel, ),
+                                 TOUT='OUI'),
+                         MODELE=model)
+
+load = AFFE_CHAR_MECA(identifier='5:1',
+                      DDL_IMPO=_F(DRX=0.0,
+                                  DX=0.0,
+                                  DY=0.0,
+                                  DZ=0.0,
+                                  GROUP_NO=('supports', )),
+                      MODELE=model,
+                      PESANTEUR=_F(DIRECTION=(0.0, 0.0, -1.0),
+                                   GRAVITE=10000.0))
+
+reslin = MECA_STATIQUE(identifier='6:1',
+                       CARA_ELEM=elemprop,
+                       CHAM_MATER=fieldmat,
+                       EXCIT=_F(CHARGE=load),
+                       MODELE=model)
+
+reslin = CALC_CHAMP(identifier='7:1',
+                    reuse=reslin,
+                    CONTRAINTE=('EFGE_NOEU', 'SIPO_NOEU'),
+                    FORCE=('REAC_NODA', ),
+                    RESULTAT=reslin)
+
+table = POST_RELEVE_T(identifier='8:1',
+                      ACTION=_F(GROUP_NO=('supports', ),
+                                INTITULE='reactions',
+                                NOM_CHAM='REAC_NODA',
+                                OPERATION=('EXTRACTION', ),
+                                RESULTANTE=('DX', 'DY', 'DZ'),
+                                RESULTAT=reslin))
+
+IMPR_RESU(identifier='9:1',
+          RESU=_F(CARA_ELEM=elemprop,
+                  NOM_CHAM=('DEPL', 'EFGE_NOEU', 'SIPO_NOEU'),
+                  RESULTAT=reslin),
+          UNITE=80)
+
+IMPR_TABLE(identifier='10:1',
+           FORMAT='TABLEAU',
+           FORMAT_R='E12.5',
+           TABLE=table,
+           UNITE=8)
+
+FIN()
