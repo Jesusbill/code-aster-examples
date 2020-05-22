@@ -1,0 +1,67 @@
+DEBUT(LANG='EN')
+
+
+mesh = LIRE_MAILLAGE(identifier='0:1',
+                     UNITE=2)
+
+model = AFFE_MODELE(identifier='1:1',
+                    AFFE=_F(MODELISATION=('DKT', ),
+                            PHENOMENE='MECANIQUE',
+                            TOUT='OUI'),
+                    MAILLAGE=mesh)
+
+elemprop = AFFE_CARA_ELEM(identifier='2:1',
+                          COQUE=_F(EPAIS=0.3,
+                                   GROUP_MA=('slab', ),
+                                   VECTEUR=(0.0, 1.0, 0.0)),
+                          MODELE=model)
+
+mater = DEFI_MATERIAU(identifier='3:1',
+                      ELAS=_F(E=35700000000.0,
+                              NU=0.0))
+
+fieldmat = AFFE_MATERIAU(identifier='4:1',
+                         AFFE=_F(MATER=(mater, ),
+                                 TOUT='OUI'),
+                         MODELE=model)
+
+load = AFFE_CHAR_MECA(identifier='5:1',
+                      DDL_IMPO=_F(DX=0.0,
+                                  DY=0.0,
+                                  DZ=0.0,
+                                  GROUP_MA=('pinned', )),
+                      FORCE_COQUE=_F(FZ=-2000.0,
+                                     GROUP_MA=('slab', )),
+                      MODELE=model)
+
+reslin = MECA_STATIQUE(identifier='6:1',
+                       CARA_ELEM=elemprop,
+                       CHAM_MATER=fieldmat,
+                       EXCIT=_F(CHARGE=load),
+                       MODELE=model)
+
+reslin = CALC_CHAMP(identifier='7:1',
+                    reuse=reslin,
+                    CONTRAINTE=('EFGE_ELNO', ),
+                    RESULTAT=reslin)
+
+reslin = CALC_FERRAILLAGE(identifier='8:1',
+                          reuse=reslin,
+                          AFFE=_F(C_INF=0.04,
+                                  C_SUP=0.04,
+                                  FCK=35000000.0,
+                                  FYK=450000000.0,
+                                  GAMMA_C=1.5,
+                                  GAMMA_S=1.15,
+                                  GROUP_MA=('slab', ),
+                                  UNITE_CONTRAINTE='Pa'),
+                          CODIFICATION='EC2',
+                          RESULTAT=reslin,
+                          TYPE_COMB='ELU')
+
+IMPR_RESU(identifier='9:1',
+          RESU=_F(RESULTAT=reslin,
+                  TOUT_CHAM='OUI'),
+          UNITE=80)
+
+FIN()

@@ -19,6 +19,12 @@ Each folder contains a `.med` file with the mesh of the structure and a `.comm` 
 [Tutorial 07](Tutorial_07): Static analysis of a cantilever beam with beam elements and post-processing of results
 - [Video](https://youtu.be/Cx6mGyJH1Ms)
 
+Tutorial 08: Static analysis of a cantilever beam with shell elements and post-processing of results
+- [Video](https://youtu.be/qror21Uzc6c)
+
+[Tutorial 09](Tutorial_09): Calculation of reinforcement density for shell elements
+- [Video](https://youtu.be/wo5SJwPJCfU)
+
 [Define Local Axes for 1D Elements](DefineLocalAxes1D): Define the orientation of the local axes of 1D elements in Code_Aster and extract this information in the result file, then visualize the local axes in Paraview
 - [Video](https://youtu.be/FUiFjAtCyX0)
 
