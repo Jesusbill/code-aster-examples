@@ -37,9 +37,12 @@ Tutorial 08: Static analysis of a cantilever beam with shell elements and post-p
 [Tensegrity Structure Example](TensegrityExample): Nonlinear dynamic analysis of a tensegrity structure with Code_Aster
 - [Simulation Video](https://youtu.be/PegRyW-5HXY)
 
+[Tensegrity Structure Seismic Example](TensegritySeismic): Nonlinear dynamic analysis of a tensegrity structure under ground excitation with Code_Aster
+- [Simulation Video](https://youtu.be/mPJh2J6BfA8)
+
 [IFC2CA Portal Example](IFC2CA_PortalExample): Download the IFC2CA example files and load them in Salome_Meca. Here you can find the files for the portal_01 example
 
-_Note: The repository referenced in the video has been moved in the [IfcOpenShell/analysis-models](https://github.com/IfcOpenShell/analysis-models) repository. Due to major modifications in the project the Code_Aster files are not uploaded yet_
+_Note: The repository referenced in the video has been moved in the [IfcOpenShell/analysis-models](https://github.com/IfcOpenShell/analysis-models) repository_
 - [Video](https://youtu.be/V9Pc7SJvuRg)
 
 ## License
