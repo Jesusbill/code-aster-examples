@@ -34,6 +34,9 @@ Tutorial 08: Static analysis of a cantilever beam with shell elements and post-p
 [Composite Shells](CompositeShellExample): Define a composite shell with an arbitrary number of layers, orhtotropic materials and arbitrary material directions and extract generalized forces and stress for a specific layer. BONUS: Example is performed with a Cross Laminated Timber (CLT) panel
 - [Video](https://youtu.be/52INSrQ48iQ)
 
+[Parametric Study](ParametricStudyExample): Setup and perform a parametric analysis based on the composite shell example and by modifying the orientation of the layers of the panel from an initial angle of 0 to a final angle of 90 degrees with a step of 10. This tutorial is based on modifying the command file with python outside the asterStudy module. It does not cover the case of a parametric geometry.
+- [Video](https://youtu.be/Fy49b0nwpXI)
+
 [Tensegrity Structure Example](TensegrityExample): Nonlinear dynamic analysis of a tensegrity structure with Code_Aster
 - [Simulation Video](https://youtu.be/PegRyW-5HXY)
 

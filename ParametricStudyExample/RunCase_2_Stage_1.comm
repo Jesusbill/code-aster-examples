@@ -1,0 +1,116 @@
+DEBUT(LANG='EN')
+
+N_cases = 10
+orientationList = [10*i for i in range(N_cases)]
+
+mesh = LIRE_MAILLAGE(identifier='0:1',
+                     UNITE=20)
+
+model = AFFE_MODELE(identifier='1:1',
+                    AFFE=_F(MODELISATION=('DST', ),
+                            PHENOMENE='MECANIQUE',
+                            GROUP_MA=('panelA', ),),
+                    MAILLAGE=mesh)
+
+elemprop = AFFE_CARA_ELEM(identifier='2:1',
+                          COQUE=(_F(COQUE_NCOU=5,
+                                    EPAIS=140.0,
+                                    GROUP_MA=('panelA', ),
+                                    VECTEUR=(0.0, 1.0, 0.0)),
+                                 ),
+                          MODELE=model)
+
+wood = DEFI_MATERIAU(identifier='3:1',
+                     ELAS_ORTH=_F(E_L=11600.0,
+                                  E_N=300.0,
+                                  E_T=300.0,
+                                  G_LN=690.0,
+                                  G_LT=690.0,
+                                  G_TN=100.0,
+                                  NU_LN=0.35,
+                                  NU_LT=0.35,
+                                  NU_TN=0.35,
+                                  RHO=5e-10))
+
+support = AFFE_CHAR_MECA(identifier='8:1',
+                         DDL_IMPO=_F(DX=0.0,
+                                     DY=0.0,
+                                     DZ=0.0,
+                                     GROUP_MA=('support', )),
+                         MODELE=model)
+
+load = AFFE_CHAR_MECA(identifier='9:1',
+                      FORCE_COQUE=_F(FZ=-0.002,
+                                     GROUP_MA=('panelA')),
+                      MODELE=model,
+                      PESANTEUR=_F(DIRECTION=(0.0, 0.0, -1.0),
+                                   GRAVITE=10000.0))
+
+comp = [None for i in range(N_cases)]
+mat = [None for i in range(N_cases)]
+res = [None for i in range(N_cases)]
+
+for i in range(N_cases):
+    angle = orientationList[i]
+    comp[i] = DEFI_COMPOSITE(identifier='5:1',
+                             COUCHE=(_F(EPAIS=40.0,
+                                        MATER=wood,
+                                        ORIENTATION= angle),
+                                     _F(EPAIS=20.0,
+                                        MATER=wood,
+                                        ORIENTATION=-90.0 + angle),
+                                     _F(EPAIS=20.0,
+                                        MATER=wood,
+                                        ORIENTATION= angle),
+                                     _F(EPAIS=20.0,
+                                        MATER=wood,
+                                        ORIENTATION=-90.0 + angle),
+                                     _F(EPAIS=40.0,
+                                        MATER=wood,
+                                        ORIENTATION= angle)))
+
+    mat[i] = AFFE_MATERIAU(identifier='7:1',
+                             AFFE=(_F(GROUP_MA=('panelA', ),
+                                      MATER=(comp[i], )),
+                                ),
+                             MODELE=model)
+
+
+    res[i] = MECA_STATIQUE(identifier='10:1',
+                           CARA_ELEM=elemprop,
+                           CHAM_MATER=mat[i],
+                           EXCIT=(_F(CHARGE=support),
+                                  _F(CHARGE=load)),
+                           MODELE=model)
+
+disp = [None for i in range(N_cases)]
+affe = [None for i in range(N_cases)]
+for i in range(N_cases):
+    disp[i] = CREA_CHAMP(
+        TYPE_CHAM = 'NOEU_DEPL_R',
+        NOM_CHAM = 'DEPL',
+        OPERATION = 'EXTR',
+        RESULTAT = res[i],
+        INST = 0
+    )
+
+    affe[i] = _F(
+        MODELE = model,
+        CARA_ELEM = elemprop,
+        CHAM_GD = disp[i],
+        INST = i
+    )
+
+reslin = CREA_RESU(
+    OPERATION = 'AFFE',
+    TYPE_RESU = 'EVOL_ELAS',
+    NOM_CHAM = 'DEPL',
+    AFFE = affe
+)
+
+IMPR_RESU(identifier='14:1',
+          RESU=(_F(NOM_CHAM=('DEPL',),
+                   RESULTAT=reslin),),
+          UNITE=80)
+
+FIN()
