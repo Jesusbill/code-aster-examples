@@ -1,0 +1,164 @@
+
+iterationMaxNumber = 25
+
+DEBUT(
+    LANG = 'EN'
+)
+
+mesh = LIRE_MAILLAGE(
+    UNITE = 2
+)
+
+model = AFFE_MODELE(
+    AFFE = _F(
+        MODELISATION=('3D', ),
+        PHENOMENE='MECANIQUE',
+        TOUT='OUI'
+    ),
+    MAILLAGE = mesh
+)
+
+mater = DEFI_MATERIAU(
+    ELAS = _F(
+        E = 200000.0,
+        NU = 0.2
+    ),
+    ECRO_LINE = _F(
+        D_SIGM_EPSI = 2000.0,
+        SY = 20000.0
+    )
+)
+
+fieldmat = AFFE_MATERIAU(
+    AFFE = _F(
+        MATER=(mater, ),
+        TOUT='OUI'
+    ),
+    MODELE = model
+)
+
+listr = DEFI_LIST_REEL(
+    DEBUT = 0.0,
+    INTERVALLE = _F(
+        JUSQU_A = 4.0,
+        NOMBRE = 40
+    )
+)
+
+listrIn = DEFI_LIST_INST(
+    METHODE='AUTO',
+    DEFI_LIST = _F(
+        LIST_INST = listr
+    )
+)
+
+func = DEFI_FONCTION(
+    NOM_PARA='INST',
+    VALE=(0.0, 0.0, 1.0, 1.0, 3.0, -1.0, 4.0, 0.0)
+    # VALE=(0.0, 0.0, 4.0, 4.0)
+)
+
+bottom = AFFE_CHAR_MECA(
+    DDL_IMPO = _F(
+        DX = 0.0,
+        DY = 0.0,
+        DZ = 0.0,
+        GROUP_MA=('side2', )
+    ),
+    MODELE = model
+)
+
+top = AFFE_CHAR_MECA(
+    DDL_IMPO = _F(
+        DX = 0.0,
+        DY = 0.0,
+        GROUP_MA=('side1', )
+    ),
+    MODELE = model
+)
+
+load = AFFE_CHAR_MECA(
+    DDL_IMPO = _F(
+        DZ = 20.0,
+        GROUP_MA=('side1', )
+    ),
+    MODELE = model
+)
+
+resnonl = STAT_NON_LINE(
+    CHAM_MATER = fieldmat,
+    COMPORTEMENT=(
+        _F(
+            DEFORMATION = 'GDEF_LOG',
+            RELATION = 'VMIS_CINE_LINE',
+            TOUT = 'OUI'
+        )
+    ),
+    CONVERGENCE = _F(
+        ARRET = 'OUI',
+        ITER_GLOB_MAXI = iterationMaxNumber,
+    ),
+    EXCIT=(
+        _F(
+            CHARGE = bottom
+        ),
+        _F(
+            CHARGE = top
+        ),
+        _F(
+            CHARGE = load,
+            FONC_MULT = func
+        )
+    ),
+    INCREMENT = _F(
+        LIST_INST = listrIn
+    ),
+    # NEWTON = _F(
+    #     PREDICTION = 'ELASTIQUE',
+    #     PAS_MINI_ELAS = 0.005,
+    #     REAC_ITER = 1
+    # ),
+    MODELE = model,
+    ARCHIVAGE = _F(
+        LIST_INST = listr
+    )
+)
+
+resnonl = CALC_CHAMP(
+    reuse = resnonl,
+    RESULTAT = resnonl,
+    MODELE = model,
+    CHAM_MATER = fieldmat,
+    CONTRAINTE = 'SIEF_NOEU',
+    VARI_INTERNE = 'VARI_ELNO',
+    FORCE = 'REAC_NODA',
+)
+
+Reac = POST_RELEVE_T(
+    ACTION = _F(
+        INTITULE = 'Sum_Reac',
+        GROUP_NO = 'side2',
+        RESULTAT = resnonl,
+        NOM_CHAM = 'REAC_NODA',
+        RESULTANTE = ('DX','DY','DZ',),
+        MOMENT = ('DRX','DRY','DRZ',),
+        POINT = (0.0,0.0,0.0,),
+        OPERATION = 'EXTRACTION'
+    )
+)
+
+IMPR_TABLE(
+        TABLE = Reac,
+        UNITE = 10,
+        FORMAT_R = '1PE12.6'
+    )
+
+IMPR_RESU(
+    RESU = _F(
+        NOM_CHAM=('DEPL', 'SIEF_NOEU', 'VARI_ELNO'),
+        RESULTAT = resnonl
+    ),
+    UNITE = 80
+)
+
+FIN()
