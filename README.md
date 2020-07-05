@@ -48,6 +48,10 @@ Tutorial 08: Static analysis of a cantilever beam with shell elements and post-p
 _Note: The repository referenced in the video has been moved in the [IfcOpenShell/analysis-models](https://github.com/IfcOpenShell/analysis-models) repository_
 - [Video](https://youtu.be/V9Pc7SJvuRg)
 
+[Rod Example](RodExample): Perform a multi-step static analysis with material and geometric nonlinearity, using an elasto-plastic material model with kinematic hardening and a logarithmic strain for geometric nonlinearity in large deformations.
+Moreover, use a Jupyter Lab notebook to do some basic post-processing based on the output test files that are created.
+- [Video](https://youtu.be/3z35NDNWV78)
+
 ## License
 All content is licensed under an open-source, 'copyleft' license:
 [Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)](https://creativecommons.org/licenses/by-sa/4.0/)
