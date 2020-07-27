@@ -49,8 +49,12 @@ _Note: The repository referenced in the video has been moved in the [IfcOpenShel
 - [Video](https://youtu.be/V9Pc7SJvuRg)
 
 [Rod Example](RodExample): Perform a multi-step static analysis with material and geometric nonlinearity, using an elasto-plastic material model with kinematic hardening and a logarithmic strain for geometric nonlinearity in large deformations.
-Moreover, use a Jupyter Lab notebook to do some basic post-processing based on the output test files that are created.
+Moreover, use a Jupyter Lab notebook to do some basic pre- and post-processing based on the input and output files.
 - [Video](https://youtu.be/3z35NDNWV78)
+
+[Linear Dynamic Analysis Example](LDA-Example): Run a linear transient dynamic analysis of a building structure based on an acceleration ground-motion time-history, after performing a modal analysis and assigning a classical damping matrix based on user-defined damping ratios for each mode.
+Moreover, use a Jupyter Lab notebook to do some basic post-processing based on the output test files that are created.
+- [Video](https://youtu.be/QoaNW4zC5u0)
 
 ## License
 All content is licensed under an open-source, 'copyleft' license:

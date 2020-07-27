@@ -1,0 +1,400 @@
+# Units N, mm, sec
+gGrav = 9806.0
+dt = 0.001
+tFin = 15.0
+archiveStep = 10
+damping = 0.05
+
+DEBUT()
+
+mesh = LIRE_MAILLAGE(
+    FORMAT = 'MED',
+    UNITE = 2
+)
+
+model = AFFE_MODELE(
+    MAILLAGE = mesh,
+    AFFE = (
+        _F(
+            TOUT = 'OUI',
+            MODELISATION = '3D',
+            PHENOMENE = 'MECANIQUE'
+        ),
+        _F(
+            GROUP_MA = ('walls', 'slab', 'roof'),
+            MODELISATION = 'DST',
+            PHENOMENE = 'MECANIQUE'
+        ),
+        _F(
+            GROUP_MA = ('columns', 'beams'),
+            MODELISATION = 'POU_D_T',
+            PHENOMENE = 'MECANIQUE'
+        )
+    )
+)
+
+element = AFFE_CARA_ELEM(
+    MODELE = model,
+    COQUE = (
+        _F(
+            GROUP_MA = ('walls', 'slab', 'roof'),
+            EPAIS = 250.0,
+            VECTEUR = (1.0, 0.0, 0.0)
+        )
+    ),
+    POUTRE = (
+        _F(
+            GROUP_MA = 'columns',
+            SECTION = 'RECTANGLE',
+            CARA = ('HY', 'HZ'),
+            VALE = (300.0, 300.0)
+        ),
+        _F(
+            GROUP_MA = 'beams',
+            SECTION = 'RECTANGLE',
+            CARA = ('HY', 'HZ'),
+            VALE = (250.0, 500.0)
+        )
+    )
+)
+
+concrete = DEFI_MATERIAU(
+    ELAS = _F(
+        E = 30000.0,
+        NU = 0.3,
+        RHO = 25.0E-10
+    )
+)
+
+material = AFFE_MATERIAU(
+    MODELE = model,
+    AFFE = (
+        _F(
+            TOUT = 'OUI',
+            MATER = concrete
+        )
+    )
+)
+
+support = AFFE_CHAR_MECA(
+    MODELE = model,
+    DDL_IMPO = _F(
+        GROUP_NO = ('columnBase', 'wallBase'),
+        DX = 0,
+        DY = 0,
+        DZ = 0,
+        DRX = 0,
+        DRY = 0,
+        DRZ = 0,
+    )
+)
+
+weight = AFFE_CHAR_MECA(
+    MODELE = model,
+    PESANTEUR = _F(
+        GRAVITE = gGrav,
+        DIRECTION = (0.0, 0.0, -1.0)
+    )
+)
+
+mass = POST_ELEM(
+    TITRE = 'Masses',
+    MODELE = model,
+    CARA_ELEM = element,
+    CHAM_MATER = material,
+    MASS_INER = (
+        _F(
+            TOUT = 'OUI'
+        ),
+        _F(
+            GROUP_MA = ('walls', 'slab', 'roof', 'columns', 'beams')
+        )
+    )
+)
+
+IMPR_TABLE(
+    TABLE = mass,
+    UNITE = 10,
+    NOM_PARA = ('LIEU', 'MASSE', 'CDG_X', 'CDG_Y', 'CDG_Z'),
+    FORMAT_R = '1PE12.3'
+)
+
+ASSEMBLAGE(
+    MODELE = model,
+    CARA_ELEM = element,
+    CHAM_MATER = material,
+    CHARGE = support,
+    NUME_DDL = CO('NUMEDDL'),
+    MATR_ASSE = (
+        _F(
+            OPTION = 'RIGI_MECA',
+            MATRICE = CO('K_MAT')
+        ),
+        _F(
+            OPTION = 'MASS_MECA',
+            MATRICE = CO('M_MAT')
+        )
+    )
+)
+
+modes = CALC_MODES(
+    MATR_RIGI = K_MAT,
+    MATR_MASS = M_MAT,
+    OPTION = 'PLUS_PETITE',
+    CALC_FREQ = _F(
+        NMAX_FREQ = 10
+    )
+)
+
+IMPR_RESU(
+    FORMAT = 'RESULTAT',
+    UNITE = 10,
+    RESU = _F(
+        RESULTAT = modes,
+        TOUT_CHAM = 'NON',
+        NOM_PARA = ('FREQ', 'MASS_EFFE_DX', 'MASS_EFFE_DY', 'MASS_EFFE_DZ'),
+        FORMAT_R = '1PE12.3',
+        FORM_TABL = 'OUI',
+    )
+)
+
+IMPR_RESU(
+    FORMAT = 'MED',
+    UNITE = 80,
+    RESU = _F(
+        RESULTAT = modes,
+        NOM_CHAM=('DEPL')
+    )
+)
+
+resLin = MECA_STATIQUE(
+    MODELE = model,
+    CARA_ELEM = element,
+    CHAM_MATER = material,
+    EXCIT = (
+        _F(
+            CHARGE = support
+        ),
+        _F(
+            CHARGE = weight
+        )
+    )
+)
+
+IMPR_RESU(
+    FORMAT = 'MED',
+    UNITE = 80,
+    RESU = _F(
+        RESULTAT = resLin,
+        NOM_CHAM=('DEPL')
+    )
+)
+
+# FIN()
+
+timeStep = DEFI_LIST_REEL(
+    DEBUT = 0.0,
+    INTERVALLE = _F(
+        PAS = dt,
+        JUSQU_A = tFin
+    )
+)
+
+accRaw_X = LIRE_FONCTION(
+    UNITE = 30,
+    NOM_PARA = 'INST',
+    NOM_RESU = 'ACC',
+    INDIC_PARA = [1,1],
+    INDIC_RESU = [1,2]
+)
+
+accSc_X = CALC_FONCTION(
+    COMB = _F(
+        FONCTION = accRaw_X,
+        COEF = gGrav
+    )
+)
+
+accIn_X = CALC_FONC_INTERP(
+    FONCTION = accSc_X,
+    INTERPOL = 'LIN',
+    LIST_PARA = timeStep,
+    NOM_PARA = 'INST',
+    NOM_RESU = 'ACC'
+)
+
+dir_X = CALC_CHAR_SEISME(
+    DIRECTION = (1.0, 0.0, 0.0),
+    MATR_MASS = M_MAT,
+    MONO_APPUI = 'OUI'
+)
+
+accF_X = AFFE_CHAR_MECA(
+    MODELE = model,
+    VECT_ASSE = dir_X
+)
+
+accRaw_Y = LIRE_FONCTION(
+    UNITE = 31,
+    NOM_PARA = 'INST',
+    NOM_RESU = 'ACC',
+    INDIC_PARA = [1,1],
+    INDIC_RESU = [1,2]
+)
+
+accSc_Y = CALC_FONCTION(
+    COMB = _F(
+        FONCTION = accRaw_Y,
+        COEF = gGrav
+    )
+)
+
+accIn_Y = CALC_FONC_INTERP(
+    FONCTION = accSc_Y,
+    INTERPOL = 'LIN',
+    LIST_PARA = timeStep,
+    NOM_PARA = 'INST',
+    NOM_RESU = 'ACC'
+)
+
+dir_Y = CALC_CHAR_SEISME(
+    DIRECTION = (0.0, 1.0, 0.0),
+    MATR_MASS = M_MAT,
+    MONO_APPUI = 'OUI'
+)
+
+accF_Y = AFFE_CHAR_MECA(
+    MODELE = model,
+    VECT_ASSE = dir_Y
+)
+
+resLin_D = CREA_CHAMP(
+    OPERATION = 'EXTR',
+    TYPE_CHAM = 'NOEU_DEPL_R',
+    NOM_CHAM = 'DEPL',
+    RESULTAT = resLin
+)
+
+resDyna = DYNA_VIBRA(
+    MODELE = model,
+    CARA_ELEM = element,
+    CHAM_MATER = material,
+    TYPE_CALCUL = 'TRAN',
+    BASE_CALCUL = 'PHYS',
+    MATR_RIGI = K_MAT,
+    MATR_MASS = M_MAT,
+    ETAT_INIT = _F(
+        DEPL = resLin_D
+    ),
+    EXCIT = (
+        _F(
+            CHARGE = weight
+        ),
+        _F(
+            CHARGE = accF_X,
+            FONC_MULT = accIn_X,
+        ),
+        _F(
+            CHARGE = accF_Y,
+            FONC_MULT = accIn_Y,
+        )
+    ),
+    AMOR_MODAL = _F(
+        NB_MODE = 5,
+        AMOR_REDUIT=(damping,),
+        MODE_MECA = modes
+    ),
+    INCREMENT = _F(
+        LIST_INST = timeStep,
+        INST_FIN = tFin
+    ),
+    ARCHIVAGE = _F(
+        PAS_ARCH = archiveStep,
+        CHAM_EXCLU = ('VITE',)
+    ),
+    SCHEMA_TEMPS=_F(
+        SCHEMA = 'NEWMARK',
+        BETA = 0.25,
+        GAMMA = 0.5
+    ),
+)
+
+disp_X = POST_RELEVE_T(
+    ACTION = _F(
+        INTITULE = 'disp_X',
+        OPERATION = 'MOYENNE_ARITH',
+        RESULTAT = resDyna,
+        GROUP_MA = 'roof',
+        NOM_CHAM = 'DEPL',
+        NOM_CMP = 'DX'
+    )
+)
+
+disp_X = CALC_TABLE(
+    reuse = disp_X,
+	TABLE = disp_X,
+	ACTION = (
+		_F(
+            OPERATION = 'EXTR',
+            NOM_PARA = ('INST', 'MOYENNE')
+        ),
+		_F(
+            OPERATION = 'RENOMME',
+            NOM_PARA = ('MOYENNE', 'disp_X')
+        )
+	)
+)
+
+disp_Y = POST_RELEVE_T(
+    ACTION = _F(
+        INTITULE = 'disp_Y',
+        OPERATION = 'MOYENNE_ARITH',
+        RESULTAT = resDyna,
+        GROUP_MA = 'roof',
+        NOM_CHAM = 'DEPL',
+        NOM_CMP = 'DY'
+    )
+)
+
+disp_Y = CALC_TABLE(
+    reuse = disp_Y,
+	TABLE = disp_Y,
+	ACTION = (
+		_F(
+            OPERATION = 'EXTR',
+            NOM_PARA = ('INST', 'MOYENNE')
+        ),
+		_F(
+            OPERATION = 'RENOMME',
+            NOM_PARA = ('MOYENNE', 'disp_Y')
+        )
+	)
+)
+
+disp_Tab = CALC_TABLE(
+    TABLE = disp_X,
+	ACTION = (
+		_F(
+            OPERATION = 'COMB',
+            TABLE = disp_Y,
+            NOM_PARA = 'INST'
+        )
+	)
+)
+
+IMPR_TABLE(
+    TABLE = disp_Tab,
+    UNITE = 11,
+    FORMAT_R = '1PE12.3'
+)
+
+IMPR_RESU(
+    FORMAT = 'MED',
+    UNITE = 81,
+    RESU = _F(
+        RESULTAT = resDyna,
+        NOM_CHAM = ('DEPL', 'ACCE')
+    )
+)
+
+FIN()
