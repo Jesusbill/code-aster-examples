@@ -1,0 +1,57 @@
+DEBUT(LANG='EN')
+
+mesh = LIRE_MAILLAGE(UNITE=20)
+
+model = AFFE_MODELE(AFFE=_F(MODELISATION=('3D', ),
+                            PHENOMENE='MECANIQUE',
+                            TOUT='OUI'),
+                    MAILLAGE=mesh)
+
+mater = DEFI_MATERIAU(ELAS=_F(E=210000.0,
+                              NU=0.1))
+
+fieldmat = AFFE_MATERIAU(AFFE=_F(MATER=(mater, ),
+                                 TOUT='OUI'),
+                         MODELE=model)
+
+load = AFFE_CHAR_MECA(DDL_IMPO=_F(DX=0.0,
+                                  DY=0.0,
+                                  DZ=0.0,
+                                  GROUP_MA=('fix', )),
+                      FORCE_FACE=_F(FX=0.1,
+                                    GROUP_MA=('force', )),
+                      MODELE=model)
+
+load0 = AFFE_CHAR_MECA(LIAISON_GROUP=(_F(COEF_IMPO=0.0,
+                                         COEF_MULT_1=(1.0, ),
+                                         COEF_MULT_2=(-1.0, ),
+                                         DDL_1=('DX', ),
+                                         DDL_2=('DX', ),
+                                         GROUP_NO_1=('cont_p', ),
+                                         GROUP_NO_2=('cont_2', )),
+                                      _F(COEF_IMPO=0.0,
+                                         COEF_MULT_1=(1.0, ),
+                                         COEF_MULT_2=(-1.0, ),
+                                         DDL_1=('DY', ),
+                                         DDL_2=('DY', ),
+                                         GROUP_NO_1=('cont_p', ),
+                                         GROUP_NO_2=('cont_2', )),
+                                      _F(COEF_IMPO=0.0,
+                                         COEF_MULT_1=(1.0, ),
+                                         COEF_MULT_2=(-1.0, ),
+                                         DDL_1=('DZ', ),
+                                         DDL_2=('DZ', ),
+                                         GROUP_NO_1=('cont_p', ),
+                                         GROUP_NO_2=('cont_2', ))),
+                       MODELE=model)
+
+reslin = MECA_STATIQUE(CHAM_MATER=fieldmat,
+                       EXCIT=(_F(CHARGE=load),
+                              _F(CHARGE=load0)),
+                       MODELE=model)
+
+IMPR_RESU(RESU=_F(RESULTAT=reslin,
+                  TOUT_CHAM='OUI'),
+          UNITE=80)
+
+FIN()
