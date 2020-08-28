@@ -28,8 +28,11 @@ Tutorial 08: Static analysis of a cantilever beam with shell elements and post-p
 [Tutorial 10 - Connect Non-Conformal Meshes](Tutorial_10): Connect non-conformal meshes, that is, meshes with interface boundaries in which the mesh node locations are not identical.
 - [Video](https://youtu.be/4peRNehSsj4)
 
-[Tutorial 11 - Connect Conformal Meshes](Tutorial_10): Connect conformal meshes, that is, meshes with interface boundaries in which the mesh node locations are identical.
+[Tutorial 11 - Connect Conformal Meshes](Tutorial_11): Connect conformal meshes, that is, meshes with interface boundaries in which the mesh node locations are identical.
 - [Video](https://youtu.be/U4qTv7UFFdA)
+
+[Tutorial 12 - Connect Objects With "Partition" Command](Tutorial_12): Use of the "partition" command in GEOM module of Salome_Meca to connect objects and obtain a single object to be meshed, similarly to "Union" operation in other software.
+- [Video](https://youtu.be/pdlUbAUb1GY)
 
 [Define Local Axes for 1D Elements](DefineLocalAxes1D): Define the orientation of the local axes of 1D elements in Code_Aster and extract this information in the result file, then visualize the local axes in Paraview
 - [Video](https://youtu.be/FUiFjAtCyX0)
