@@ -1,0 +1,43 @@
+DEBUT(LANG='EN')
+
+mesh = LIRE_MAILLAGE(UNITE=20)
+
+model = AFFE_MODELE(AFFE=_F(MODELISATION=('3D', ),
+                            PHENOMENE='MECANIQUE',
+                            TOUT='OUI'),
+                    MAILLAGE=mesh)
+
+mater = DEFI_MATERIAU(ELAS=_F(E=210000.0,
+                              NU=0.2,
+                              RHO=1.0))
+
+fieldmat = AFFE_MATERIAU(AFFE=_F(MATER=(mater, ),
+                                 TOUT='OUI'),
+                         MODELE=model)
+
+load = AFFE_CHAR_MECA(DDL_IMPO=_F(DX=0.0,
+                                  DY=0.0,
+                                  DZ=0.0,
+                                  GROUP_MA=('fix', )),
+                      MODELE=model)
+
+ASSEMBLAGE(CHAM_MATER=fieldmat,
+           CHARGE=(load, ),
+           MATR_ASSE=(_F(MATRICE=CO('mass'),
+                         OPTION='MASS_MECA'),
+                      _F(MATRICE=CO('stiff'),
+                         OPTION='RIGI_MECA')),
+           MODELE=model,
+           NUME_DDL=CO('dofs'))
+
+modes = CALC_MODES(CALC_FREQ=_F(NMAX_FREQ=15),
+                   MATR_MASS=mass,
+                   MATR_RIGI=stiff,
+                   OPTION='PLUS_PETITE',
+                   SOLVEUR_MODAL=_F(METHODE='SORENSEN'))
+
+IMPR_RESU(RESU=_F(RESULTAT=modes,
+                  TOUT_CHAM='OUI'),
+          UNITE=80)
+
+FIN()

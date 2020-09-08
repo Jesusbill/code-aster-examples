@@ -34,6 +34,9 @@ Tutorial 08: Static analysis of a cantilever beam with shell elements and post-p
 [Tutorial 12 - Connect Objects With "Partition" Command](Tutorial_12): Use of the "partition" command in GEOM module of Salome_Meca to connect objects and obtain a single object to be meshed, similarly to "Union" operation in other software.
 - [Video](https://youtu.be/pdlUbAUb1GY)
 
+[Tutorial 13 - Modal Analysis with Solid Elements](Tutorial_13): perform a modal analysis of a 3D model with solid elements.
+- [Video](https://youtu.be/qnE_PcYbw7M)
+
 [Define Local Axes for 1D Elements](DefineLocalAxes1D): Define the orientation of the local axes of 1D elements in Code_Aster and extract this information in the result file, then visualize the local axes in Paraview
 - [Video](https://youtu.be/FUiFjAtCyX0)
 
