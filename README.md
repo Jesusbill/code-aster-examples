@@ -11,7 +11,7 @@ Each folder contains a `.med` file with the mesh of the structure and a `.comm` 
 - [Video - Tutorial 03](https://youtu.be/07UxN1EaUvI)
 
 
-[Tutorials 04-06](Tutorials_01-03): Steady-state thermo-mechanical analysis of a cantilever beam with 3D solid elements
+[Tutorials 04-06](Tutorials_04-06): Steady-state thermo-mechanical analysis of a cantilever beam with 3D solid elements
 - [Video - Tutorial 04](https://youtu.be/Rs_DuxT5dgw)
 - [Video - Tutorial 05](https://youtu.be/D7V7Qn-40DU)
 - [Video - Tutorial 06](https://youtu.be/eXNyT-aPh6Y)
