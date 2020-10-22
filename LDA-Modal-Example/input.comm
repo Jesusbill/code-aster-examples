@@ -89,6 +89,14 @@ support = AFFE_CHAR_MECA(
     )
 )
 
+weight = AFFE_CHAR_MECA(
+    MODELE = model,
+    PESANTEUR = _F(
+        GRAVITE = gGrav,
+        DIRECTION = (0.0, 0.0, -1.0)
+    )
+)
+
 mass = POST_ELEM(
     TITRE = 'Masses',
     MODELE = model,
@@ -129,6 +137,44 @@ ASSEMBLAGE(
     )
 )
 
+modes = CALC_MODES(
+    MATR_RIGI = K_MAT,
+    MATR_MASS = M_MAT,
+    OPTION = 'PLUS_PETITE',
+    CALC_FREQ = _F(
+        NMAX_FREQ = 10
+    )
+)
+
+IMPR_RESU(
+    FORMAT = 'RESULTAT',
+    UNITE = 10,
+    RESU = _F(
+        RESULTAT = modes,
+        TOUT_CHAM = 'NON',
+        NOM_PARA = ('FREQ', 'MASS_EFFE_DX', 'MASS_EFFE_DY', 'MASS_EFFE_DZ'),
+        FORMAT_R = '1PE12.3',
+        FORM_TABL = 'OUI',
+    )
+)
+
+IMPR_RESU(
+    FORMAT = 'MED',
+    UNITE = 80,
+    RESU = _F(
+        RESULTAT = modes,
+        NOM_CHAM=('DEPL')
+    )
+)
+
+timeGrav = DEFI_LIST_REEL(
+    DEBUT = -1.0,
+    INTERVALLE = _F(
+        PAS = 0.01,
+        JUSQU_A = 0.0
+    )
+)
+
 timeStep = DEFI_LIST_REEL(
     DEBUT = 0.0,
     INTERVALLE = _F(
@@ -145,21 +191,13 @@ timeArch = DEFI_LIST_REEL(
     )
 )
 
-weight = AFFE_CHAR_MECA(
-    MODELE = model,
-    PESANTEUR = _F(
-        GRAVITE = gGrav,
-        DIRECTION = (0.0, 0.0, -1.0)
-    )
-)
-
 weight_F = DEFI_FONCTION(
     NOM_PARA = 'INST',
     PROL_DROITE = 'CONSTANT',
     PROL_GAUCHE = 'CONSTANT',
     VALE = (
-        0.0, 0.0,
-        1.0, 1.0
+        -1.0, 0.0,
+        0.0, 1.0
     )
 )
 
@@ -256,36 +294,6 @@ ASSEMBLAGE(
     )
 )
 
-modes = CALC_MODES(
-    MATR_RIGI = K_MAT,
-    MATR_MASS = M_MAT,
-    OPTION = 'PLUS_PETITE',
-    CALC_FREQ = _F(
-        NMAX_FREQ = 10
-    )
-)
-
-IMPR_RESU(
-    FORMAT = 'RESULTAT',
-    UNITE = 10,
-    RESU = _F(
-        RESULTAT = modes,
-        TOUT_CHAM = 'NON',
-        NOM_PARA = ('FREQ', 'MASS_EFFE_DX', 'MASS_EFFE_DY', 'MASS_EFFE_DZ'),
-        FORMAT_R = '1PE12.3',
-        FORM_TABL = 'OUI',
-    )
-)
-
-IMPR_RESU(
-    FORMAT = 'MED',
-    UNITE = 80,
-    RESU = _F(
-        RESULTAT = modes,
-        NOM_CHAM=('DEPL')
-    )
-)
-
 PROJ_BASE(
     BASE = modes,
     MATR_ASSE_GENE = (
@@ -317,7 +325,7 @@ PROJ_BASE(
     )
 )
 
-resGene = DYNA_VIBRA(
+resGrav = DYNA_VIBRA(
     TYPE_CALCUL = 'TRAN',
     BASE_CALCUL = 'GENE',
     MATR_RIGI = K_MAT_G,
@@ -325,15 +333,42 @@ resGene = DYNA_VIBRA(
     EXCIT = (
         _F(
             VECT_ASSE_GENE = weight_G,
-            FONC_MULT = weight_F,
+            FONC_MULT = weight_F
+        )
+    ),
+    AMOR_MODAL = _F(
+        AMOR_REDUIT=tuple([0.2] * 10)
+    ),
+    INCREMENT = _F(
+        LIST_INST = timeGrav
+    ),
+    SCHEMA_TEMPS=_F(
+        SCHEMA = 'NEWMARK',
+        BETA = 0.25,
+        GAMMA = 0.5
+    ),
+)
+
+resGene = DYNA_VIBRA(
+    TYPE_CALCUL = 'TRAN',
+    BASE_CALCUL = 'GENE',
+    MATR_RIGI = K_MAT_G,
+    MATR_MASS = M_MAT_G,
+    ETAT_INIT = _F(
+        RESULTAT = resGrav
+    ),
+    EXCIT = (
+        _F(
+            VECT_ASSE_GENE = weight_G,
+            FONC_MULT = weight_F
         ),
         _F(
             VECT_ASSE_GENE = accF_XG,
-            FONC_MULT = accIn_X,
+            FONC_MULT = accIn_X
         ),
         _F(
             VECT_ASSE_GENE = accF_YG,
-            FONC_MULT = accIn_Y,
+            FONC_MULT = accIn_Y
         )
     ),
     AMOR_MODAL = _F(
@@ -352,7 +387,9 @@ resGene = DYNA_VIBRA(
 resDyna = REST_GENE_PHYS(
     NOM_CHAM = ('DEPL', 'ACCE'),
     RESU_GENE = resGene,
-    LIST_INST = timeArch
+    LIST_INST = timeArch,
+    PRECISION = 1.0E-06,
+    CRITERE = 'ABSOLU'
 )
 
 disp_X = POST_RELEVE_T(
