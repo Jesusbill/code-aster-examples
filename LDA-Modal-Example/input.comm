@@ -4,6 +4,7 @@ dt = 0.001
 tFin = 15.0
 archiveStep = 10
 damping = 0.05
+nModes = 10
 
 DEBUT()
 
@@ -142,7 +143,7 @@ modes = CALC_MODES(
     MATR_MASS = M_MAT,
     OPTION = 'PLUS_PETITE',
     CALC_FREQ = _F(
-        NMAX_FREQ = 10
+        NMAX_FREQ = nModes
     )
 )
 
@@ -337,7 +338,7 @@ resGrav = DYNA_VIBRA(
         )
     ),
     AMOR_MODAL = _F(
-        AMOR_REDUIT=tuple([0.2] * 10)
+        AMOR_REDUIT = tuple([0.2] * nModes)
     ),
     INCREMENT = _F(
         LIST_INST = timeGrav
@@ -372,7 +373,7 @@ resGene = DYNA_VIBRA(
         )
     ),
     AMOR_MODAL = _F(
-        AMOR_REDUIT=tuple([damping] * 10)
+        AMOR_REDUIT = tuple([damping] * nModes)
     ),
     INCREMENT = _F(
         LIST_INST = timeStep
@@ -381,7 +382,7 @@ resGene = DYNA_VIBRA(
         SCHEMA = 'NEWMARK',
         BETA = 0.25,
         GAMMA = 0.5
-    ),
+    )
 )
 
 resDyna = REST_GENE_PHYS(

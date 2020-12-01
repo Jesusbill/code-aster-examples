@@ -14,19 +14,19 @@ P version stable
 P lang en
 P debug nodebug
 P mode interactif
-P ncpus 
+P ncpus
 P mpi_nbcpu 1
 P mpi_nbnoeud 1
-P classe 
-P depart 
-P after_job 
-P distrib 
-P exectool 
-P multiple 
+P classe
+P depart
+P after_job
+P distrib
+P exectool
+P multiple
 P nomjob run
 P origine ASTK 2019.0.final
 P display Ubuntu-ThinkPad-P1:1
-A args 
+A args
 A memjeveux 625.0
 A tpmax 900
 P memjob 5120000
@@ -34,18 +34,18 @@ P tpsjob 15
 P follow_output yes
 P nbmaxnook 5
 P cpresok RESNOOK
-P only_nook 
+P only_nook
 P facmtps 1
 P corefilesize unlimited
-F comm /home/jesusbill/Dev-Projects/github.com/Jesusbill/code-aster-examples/LDA-Modal-Example/input.comm D 1
-F mmed /home/jesusbill/Dev-Projects/github.com/Jesusbill/code-aster-examples/LDA-Modal-Example/model.med D 2
-F dat /home/jesusbill/Dev-Projects/github.com/Jesusbill/code-aster-examples/LDA-Modal-Example/A-TMZ000.txt D 30
-F dat /home/jesusbill/Dev-Projects/github.com/Jesusbill/code-aster-examples/LDA-Modal-Example/A-TMZ270.txt D 31
-F mess /home/jesusbill/Dev-Projects/github.com/Jesusbill/code-aster-examples/LDA-Modal-Example/output.mess R 6
-F rmed /home/jesusbill/Dev-Projects/github.com/Jesusbill/code-aster-examples/LDA-Modal-Example/modal.rmed R 80
-F rmed /home/jesusbill/Dev-Projects/github.com/Jesusbill/code-aster-examples/LDA-Modal-Example/seismic.rmed R 81
-F resu /home/jesusbill/Dev-Projects/github.com/Jesusbill/code-aster-examples/LDA-Modal-Example/modal.resu R 10
-F resu /home/jesusbill/Dev-Projects/github.com/Jesusbill/code-aster-examples/LDA-Modal-Example/seismic.resu R 11
+F comm ./input.comm D 1
+F mmed ./model.med D 2
+F dat ./A-TMZ000.txt D 30
+F dat ./A-TMZ270.txt D 31
+F mess ./output.mess R 6
+F rmed ./modal.rmed R 80
+F rmed ./seismic.rmed R 81
+F resu ./modal.resu R 10
+F resu ./seismic.resu R 11
 P consbtc oui
 P soumbtc oui
 P actions make_etude
