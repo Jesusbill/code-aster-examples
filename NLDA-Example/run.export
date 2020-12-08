@@ -1,0 +1,51 @@
+P profastk jesusbill@Ubuntu-ThinkPad-P1:/home/jesusbill/Dev-Projects/github.com/Jesusbill/code-aster-examples/NLDA-Example/run.astk
+P serveur localhost
+P username jesusbill
+P aster_root /home/jesusbill/salome_meca/V9_INTEGR_public_universal/tools/Code_aster_frontend-salomemeca
+P platform Linux64
+P protocol_exec asrun.plugins.server.SSHServer
+P protocol_copyto asrun.plugins.server.SCPServer
+P protocol_copyfrom asrun.plugins.server.SCPServer
+P proxy_dir /tmp
+P noeud localhost
+P mclient Ubuntu-ThinkPad-P1
+P uclient jesusbill
+P version stable
+P lang en
+P debug nodebug
+P mode interactif
+P ncpus
+P mpi_nbcpu 1
+P mpi_nbnoeud 1
+P classe
+P depart
+P after_job
+P distrib
+P exectool
+P multiple
+P nomjob run
+P origine ASTK 2019.0.final
+P display Ubuntu-ThinkPad-P1:1
+A args
+A memjeveux 1875.0
+A tpmax 90000
+P memjob 15360000
+P tpsjob 1500
+P follow_output yes
+P nbmaxnook 5
+P cpresok RESNOOK
+P only_nook
+P facmtps 1
+P corefilesize unlimited
+F comm ./input.comm D 1
+F libr ./model.med D 2
+F libr ./A-TMZ000.txt D 30
+F libr ./A-TMZ270.txt D 31
+F mess ./output.mess R 6
+F rmed ./modal.rmed R 80
+F libr ./seismic.rmed R 81
+F libr ./modal.resu R 10
+F libr ./seismic.resu R 11
+P consbtc oui
+P soumbtc oui
+P actions make_etude
